@@ -24,6 +24,8 @@ public class SignalingMessage {
     Object candidate;
     // List of users
     List<String> users;
+    // List of current streams
+    List<String> streamers;
 
     @Override
     public String toString() {
@@ -34,6 +36,7 @@ public class SignalingMessage {
                 ", sdp=" + sdp +
                 ", candidate=" + candidate +
                 ", users=" + users +
+                ", streamers=" + streamers +
                 '}';
     }
 }

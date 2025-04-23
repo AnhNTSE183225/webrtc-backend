@@ -16,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class SignalingController {
 
     private final Map<String, List<String>> rooms = new ConcurrentHashMap<>();
+    private final Map<String, List<String>> streamers = new ConcurrentHashMap<>();
 
     @MessageMapping("/signal/{roomId}")
     @SendTo("/topic/rooms/{roomId}")
@@ -24,7 +25,9 @@ public class SignalingController {
             SignalingMessage message
     ) {
         rooms.putIfAbsent(roomId, new CopyOnWriteArrayList<>());
-        if (message.getType().equals("JOIN")) {
+        streamers.putIfAbsent(roomId, new CopyOnWriteArrayList<>());
+
+        if (message.getType().equals("JOIN") && !rooms.get(roomId).contains(message.getSender())) {
             rooms.get(roomId).add(message.getSender());
         }
         if (message.getType().equals("LEAVE")) {
@@ -33,7 +36,19 @@ public class SignalingController {
                 rooms.remove(roomId);
             }
         }
+
+        if(message.getType().equals("STARTSTREAM") && !streamers.get(roomId).contains(message.getSender())) {
+            streamers.get(roomId).add(message.getSender());
+        }
+        if(message.getType().equals("STOPSTREAM")) {
+            streamers.get(roomId).remove(message.getSender());
+            if (streamers.get(roomId).isEmpty()) {
+                streamers.remove(roomId);
+            }
+        }
+
         message.setUsers(rooms.get(roomId));
+        message.setStreamers(streamers.get(roomId));
         log.info(message.toString());
         return message;
     }
